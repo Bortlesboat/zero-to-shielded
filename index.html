@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero to Shielded</title>
+<meta name="description" content="Go from zero to your first shielded Zcash transaction. Practice in a simulator that shows exactly what the public blockchain sees at every step.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5ef; --panel:#ffffff; --panel-2:#f0ede4; --ink:#16140f; --muted:#5f5a4d;
+  --line:#dcd6c6; --gold:#c48a00; --gold-soft:#f4b72833; --accent-ink:#16140f;
+  --good:#1f7a4d; --warn:#a4481c; --hidden:#2a2720; --hidden-ink:#f4b728;
+  --radius:14px; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --sans:"Space Grotesk",system-ui,-apple-system,Segoe UI,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e0d0a; --panel:#17150f; --panel-2:#1f1c15; --ink:#f3efe3; --muted:#a8a18f;
+    --line:#2e2a20; --gold:#f4b728; --gold-soft:#f4b72822; --accent-ink:#16140f;
+    --good:#5fd39a; --warn:#ff9a6b; --hidden:#000; --hidden-ink:#f4b728;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e0d0a; --panel:#17150f; --panel-2:#1f1c15; --ink:#f3efe3; --muted:#a8a18f;
+  --line:#2e2a20; --gold:#f4b728; --gold-soft:#f4b72822; --accent-ink:#16140f;
+  --good:#5fd39a; --warn:#ff9a6b; --hidden:#000; --hidden-ink:#f4b728;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:17px}
+a{color:var(--gold)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:56px}
+.logo{font-weight:700;letter-spacing:-.02em;text-decoration:none;color:var(--ink);white-space:nowrap}
+.logo b{color:var(--gold)}
+.progress{flex:1;display:flex;gap:4px;min-width:0}
+.progress a{flex:1;height:6px;border-radius:3px;background:var(--line);display:block}
+.progress a.done{background:var(--gold)}
+.pcount{font-family:var(--mono);font-size:13px;color:var(--muted);white-space:nowrap}
+.theme-btn{background:none;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:4px 8px;cursor:pointer;font:inherit;font-size:13px}
+
+.hero{padding:72px 0 40px}
+.hero h1{font-size:clamp(40px,7vw,76px);line-height:1;letter-spacing:-.04em;margin:0 0 20px}
+.hero h1 span{color:var(--gold)}
+.hero p.lede{font-size:clamp(18px,2.2vw,22px);color:var(--muted);max-width:640px;margin:0 0 28px}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:10px;padding:12px 18px;font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-decoration:none}
+.btn.primary{background:var(--gold);color:var(--accent-ink);border-color:var(--gold)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.progress a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.hero-split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:40px;max-width:720px}
+.mini{border:1px solid var(--line);border-radius:var(--radius);padding:14px;background:var(--panel)}
+.mini h4{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mini .row{font-family:var(--mono);font-size:13px;display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+.redact{display:inline-block;background:var(--hidden);color:var(--hidden-ink);border-radius:4px;padding:0 6px;font-family:var(--mono);font-size:12px;letter-spacing:.05em}
+
+section.step{padding:48px 0;border-top:1px solid var(--line);scroll-margin-top:64px}
+.step-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.num{font-family:var(--mono);color:var(--gold);font-size:14px}
+section.step h2{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;margin:0}
+.time{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.why{color:var(--muted);max-width:720px;font-size:18px}
+.cols{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;margin-top:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.card h3{margin:0 0 10px;font-size:18px}
+ol.do{margin:0;padding-left:22px}
+ol.do li{margin:8px 0}
+.world{background:var(--panel-2);border:1px dashed var(--line);border-radius:var(--radius);padding:18px}
+.world h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.pit{border-left:3px solid var(--warn);padding:4px 0 4px 14px;margin:16px 0 0;color:var(--ink)}
+.pit b{color:var(--warn)}
+.tip{border-left:3px solid var(--good);padding:4px 0 4px 14px;margin:16px 0 0}
+.tip b{color:var(--good)}
+.check{display:flex;align-items:center;gap:10px;margin-top:22px;font-weight:700;cursor:pointer;user-select:none;width:fit-content}
+.check input{width:22px;height:22px;accent-color:var(--gold);cursor:pointer}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--gold);color:var(--accent-ink);border-color:var(--gold);font-weight:700}
+.tabpanel[hidden]{display:none}
+
+/* inspector */
+.inspector input{width:100%;font-family:var(--mono);font-size:14px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.verdict{margin-top:12px;padding:14px;border-radius:10px;background:var(--panel-2);min-height:52px}
+.verdict .tag{display:inline-block;font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:999px;font-weight:600;margin-right:6px}
+.tag.shielded{background:var(--gold);color:var(--accent-ink)}
+.tag.public{background:var(--warn);color:#fff}
+.tag.bad{background:var(--line);color:var(--ink)}
+.samples{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.samples button{font:inherit;font-family:var(--mono);font-size:12px;border:1px solid var(--line);background:none;color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer}
+
+/* quiz */
+.quiz .q{margin:14px 0}
+.quiz .opts{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.quiz .opts button{text-align:left;font:inherit;font-size:15px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer}
+.quiz .opts button.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--panel))}
+.quiz .opts button.wrong{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,var(--panel))}
+.quiz .fb{font-size:14px;color:var(--muted);min-height:20px;margin-top:4px}
+
+/* simulator */
+#sim{padding:56px 0;border-top:1px solid var(--line);scroll-margin-top:64px}
+#sim h2{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;margin:0 0 8px}
+.sim-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:16px;margin-top:24px}
+.phone{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.bal{font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.bal small{font-size:16px;color:var(--muted);font-weight:500}
+.pools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pool{border-radius:12px;padding:10px;background:var(--panel-2);font-family:var(--mono);font-size:13px}
+.pool b{display:block;font-size:17px;margin-top:2px}
+.pool.sh{outline:2px solid var(--gold)}
+.mission{border-radius:12px;padding:14px;background:var(--gold-soft);border:1px solid var(--gold)}
+.mission .k{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:.06em;text-transform:uppercase}
+.mission p{margin:4px 0 10px}
+.mission label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
+.mission input,.mission select{width:100%;font:inherit;font-size:15px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.warnbox{margin-top:10px;padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--warn) 15%,var(--panel));border:1px solid var(--warn);font-size:14px}
+.ledger{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:16px;min-height:360px}
+.ledger-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.ledger-head h3{margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.blk{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tx{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:12px;margin-bottom:10px;font-family:var(--mono);font-size:13px;animation:drop .35s ease-out}
+@keyframes drop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.tx .t{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+.tx .kind{font-family:var(--sans);font-weight:700;font-size:14px}
+.tx dl{display:grid;grid-template-columns:70px 1fr;gap:3px 10px;margin:0}
+.tx dt{color:var(--muted)}
+.tx dd{margin:0;overflow-wrap:anywhere}
+.tx .note{font-family:var(--sans);font-size:13px;color:var(--muted);margin-top:8px;border-top:1px dashed var(--line);padding-top:8px}
+.empty{color:var(--muted);font-size:15px;padding:30px 10px;text-align:center}
+.done-card{text-align:center;padding:10px 4px}
+.done-card h4{font-size:22px;margin:0 0 6px}
+
+details{border:1px solid var(--line);border-radius:12px;padding:12px 16px;background:var(--panel);margin:8px 0}
+summary{cursor:pointer;font-weight:700}
+details p{margin:10px 0 2px;color:var(--muted)}
+.notice{border:1px solid var(--gold);background:var(--gold-soft);border-radius:var(--radius);padding:16px 18px;margin-top:28px}
+.notice b{color:var(--gold)}
+footer{border-top:1px solid var(--line);padding:32px 0 56px;color:var(--muted);font-size:14px}
+.finish{text-align:center;padding:64px 0}
+.finish h2{font-size:clamp(30px,5vw,48px);letter-spacing:-.03em;margin:0 0 10px}
+
+@media (max-width:820px){
+  .cols,.sim-grid{grid-template-columns:1fr}
+  .hero{padding:44px 0 28px}
+  .hero-split{grid-template-columns:1fr}
+  .pcount{display:none}
+  body{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#top">zero<b>→</b>shielded</a>
+    <nav class="progress" aria-label="Progress" id="progress"></nav>
+    <span class="pcount" id="pcount">0 / 7</span>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle color theme">◐</button>
+  </div>
+</header>
+
+<main id="top">
+<div class="wrap">
+
+  <div class="hero">
+    <h1>From zero to your first <span>shielded</span> transaction.</h1>
+    <p class="lede">Seven short steps and about 15 minutes. You'll set up a wallet, get some ZEC, shield it, send it, and unshield it. At each step you'll also see exactly what a stranger reading the blockchain can learn.</p>
+    <div class="cta">
+      <a class="btn primary" href="#s1">Start step 1 →</a>
+      <a class="btn" href="#sim">Practice in the simulator first</a>
+    </div>
+    <div class="hero-split" aria-hidden="true">
+      <div class="mini">
+        <h4>Transparent transaction · public</h4>
+        <div class="row"><span>from</span><span>t1Rv4…9qKx</span></div>
+        <div class="row"><span>to</span><span>t1Mm2…Lw7P</span></div>
+        <div class="row"><span>amount</span><span>2.5000 ZEC</span></div>
+      </div>
+      <div class="mini">
+        <h4>Shielded transaction · private</h4>
+        <div class="row"><span>from</span><span class="redact">hidden</span></div>
+        <div class="row"><span>to</span><span class="redact">hidden</span></div>
+        <div class="row"><span>amount</span><span class="redact">hidden</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <section class="step" id="s1" data-step="1">
+    <div class="step-head"><span class="num">01</span><h2>Pick a wallet</h2><span class="time">~3 min</span></div>
+    <p class="why">Privacy only works if your wallet can hold <b>shielded</b> ZEC. Many popular multi-coin wallets only support transparent addresses, which are public like Bitcoin. Use a wallet built for shielded Zcash.</p>
+    <div class="cols">
+      <div class="card">
+        <div class="tabs" role="tablist" data-tabs="wallet">
+          <button role="tab" aria-selected="true" data-tab="phone">📱 Phone</button>
+          <button role="tab" aria-selected="false" data-tab="desktop">💻 Desktop</button>
+          <button role="tab" aria-selected="false" data-tab="hw">🔐 Hardware</button>
+        </div>
+        <div class="tabpanel" data-panel="phone">
+          <h3>Zodl (formerly Zashi)</h3>
+          <ol class="do">
+            <li>Install <b>Zodl</b> from the App Store or Google Play. It's also on F-Droid. Check that the publisher matches the link on <a href="https://zodl.com" target="_blank" rel="noopener">zodl.com</a>.</li>
+            <li>Tap <b>Create new wallet</b>.</li>
+            <li>That's it. The wallet is shielded by default and supports in-app swaps.</li>
+          </ol>
+          <p class="tip"><b>Why this one for beginners:</b> it defaults to shielded, shields with one tap, and lets you swap other coins into shielded ZEC without an exchange account.</p>
+        </div>
+        <div class="tabpanel" data-panel="desktop" hidden>
+          <h3>Zingo!, Zkool, Cake, and others</h3>
+          <ol class="do">
+            <li>Open the <a href="https://zechub.wiki/wallets" target="_blank" rel="noopener">ZecHub wallet list</a> and filter for <b>shielded / Ironwood-ready</b> desktop wallets.</li>
+            <li>Download only from the link the project itself publishes.</li>
+            <li>Create a new wallet. The screens will look different from the phone tab, but the steps are the same.</li>
+          </ol>
+        </div>
+        <div class="tabpanel" data-panel="hw" hidden>
+          <h3>Keystone or Ledger + a companion app</h3>
+          <ol class="do">
+            <li>Keystone pairs with Zodl for shielded cold storage. Ledger added shielded Zcash signing in 2026.</li>
+            <li>Set up the device first. Its screen is where you'll confirm every send.</li>
+            <li>Great for larger amounts. For a first try, a phone wallet is fine.</li>
+          </ol>
+        </div>
+        <p class="pit"><b>Avoid for now:</b> exchange accounts ("not your keys") and transparent-only wallets. Coinbase-style balances and multi-coin wallets like Exodus or Trust can't hold shielded ZEC.</p>
+      </div>
+      <div class="world">
+        <h3>What the world sees</h3>
+        <p>Nothing. Creating a wallet happens entirely on your device. Nothing is written to the blockchain, and nobody learns you have one.</p>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" data-done="1"> I have a shielded wallet installed</label>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step" id="s2" data-step="2">
+    <div class="step-head"><span class="num">02</span><h2>Back up your recovery phrase</h2><span class="time">~3 min</span></div>
+    <p class="why">Your recovery phrase <b>is</b> your money. If your phone dies, those words plus your wallet's <b>birthday height</b> bring everything back. If anyone else sees them, they can take everything.</p>
+    <div class="cols">
+      <div class="card">
+        <ol class="do">
+          <li>In the wallet, open <b>Settings → Recovery phrase</b> (or follow the backup prompt).</li>
+          <li>Write all the words <b>on paper, in order</b>. No screenshots, cloud notes, or password-manager "secure notes" synced to email.</li>
+          <li>Also write down the <b>wallet birthday height</b>. It's a block number that tells the wallet where to start scanning, so a restore takes minutes instead of hours.</li>
+          <li>Store the paper somewhere safe, and consider a second copy in another location.</li>
+        </ol>
+        <p class="pit"><b>Scam alert:</b> no wallet, support agent, or "Ironwood migration" site will ever need your phrase. Anyone who asks for it is stealing.</p>
+      </div>
+      <div class="card quiz" id="quiz">
+        <h3>Quick check</h3>
+        <div class="q" data-q="0">
+          <div>A "Zodl support" account DMs you to help with a stuck transaction and asks for your 24 words. You…</div>
+          <div class="opts">
+            <button data-a="0">Send them. They're support.</button>
+            <button data-a="1">Block and report. Nobody legitimate asks for them.</button>
+          </div>
+          <div class="fb" aria-live="polite"></div>
+        </div>
+        <div class="q" data-q="1">
+          <div>Your phone breaks. What do you need to get your ZEC back?</div>
+          <div class="opts">
+            <button data-a="1">Recovery phrase (plus birthday height for a fast restore)</button>
+            <button data-a="0">My old phone's PIN</button>
+          </div>
+          <div class="fb" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" data-done="2"> My phrase and birthday height are on paper</label>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step" id="s3" data-step="3">
+    <div class="step-head"><span class="num">03</span><h2>Know your addresses</h2><span class="time">~2 min</span></div>
+    <p class="why">Zcash has public (transparent) addresses and private (shielded) ones. Your wallet shows both under <b>Receive</b>. Share the shielded one whenever you can. Paste any address below to see what kind it is.</p>
+    <div class="cols">
+      <div class="card inspector">
+        <h3>Address inspector</h3>
+        <input id="addr" placeholder="Paste a Zcash address (u1…, zs1…, t1…, tex1…)" autocomplete="off" spellcheck="false" aria-label="Zcash address">
+        <div class="samples">
+          <span style="font-size:12px;color:var(--muted);align-self:center">try a prefix:</span>
+          <button data-sample="u1">u1…</button><button data-sample="zs1">zs1…</button><button data-sample="t1">t1…</button><button data-sample="tex1">tex1…</button>
+        </div>
+        <div class="verdict" id="verdict" aria-live="polite"><span style="color:var(--muted)">Checks the prefix and checksum right in your browser. Nothing is sent anywhere.</span></div>
+      </div>
+      <div class="world">
+        <h3>Cheat sheet</h3>
+        <p><span class="tag shielded verdict-tag" style="font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:999px;background:var(--gold);color:var(--accent-ink)">u1…</span> <b>Unified address.</b> The default in modern wallets. It bundles a shielded receiver and sometimes a transparent one, and the sender's wallet picks the most private option.</p>
+        <p><span class="tag shielded" style="font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:999px;background:var(--gold);color:var(--accent-ink)">zs1…</span> <b>Sapling address.</b> Older, still shielded, still works.</p>
+        <p><span class="tag public" style="font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn);color:#fff">t1… / t3…</span> <b>Transparent address.</b> Fully public, like Bitcoin. Some exchanges only support these.</p>
+        <p><span class="tag public" style="font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn);color:#fff">tex1…</span> <b>TEX address.</b> Can only receive from transparent funds. Good wallets unshield for you automatically in two steps.</p>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" data-done="3"> I found my shielded address under Receive</label>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step" id="s4" data-step="4">
+    <div class="step-head"><span class="num">04</span><h2>Get some ZEC</h2><span class="time">~5 min</span></div>
+    <p class="why">Start small. A few dollars is enough to learn with. There are three common ways in.</p>
+    <div class="cols">
+      <div class="card">
+        <div class="tabs" role="tablist" data-tabs="get">
+          <button role="tab" aria-selected="true" data-tab="swap">Swap in wallet</button>
+          <button role="tab" aria-selected="false" data-tab="cex">From an exchange</button>
+          <button role="tab" aria-selected="false" data-tab="friend">From a friend</button>
+        </div>
+        <div class="tabpanel" data-panel="swap">
+          <ol class="do">
+            <li>In Zodl, open <b>Swap</b>. It's powered by NEAR Intents.</li>
+            <li>Choose what you're paying with (for example BTC, ETH, SOL, or a stablecoin). You'll get a deposit address.</li>
+            <li>Send that coin from wherever you hold it. Shielded ZEC arrives in your wallet.</li>
+          </ol>
+          <p class="tip"><b>Nice bonus:</b> this lands directly in your shielded balance, so you can skip step 5.</p>
+        </div>
+        <div class="tabpanel" data-panel="cex" hidden>
+          <ol class="do">
+            <li>Buy ZEC on an exchange that lists it.</li>
+            <li>Choose <b>Withdraw</b> and paste your wallet's address. If the exchange rejects a <code>u1…</code> address, use the <b>transparent</b> <code>t1…</code> one from your wallet instead.</li>
+            <li>Send a small test amount first, then the rest.</li>
+          </ol>
+          <p class="tip"><b>Landed as transparent?</b> Totally normal. That's what step 5 is for.</p>
+        </div>
+        <div class="tabpanel" data-panel="friend" hidden>
+          <ol class="do">
+            <li>Send your friend your <b>shielded</b> (<code>u1…</code>) address.</li>
+            <li>Ask them to include a memo. Only you will be able to read it.</li>
+            <li>It arrives shielded. Nobody else can see who sent it, how much, or the memo.</li>
+          </ol>
+        </div>
+        <p class="pit"><b>Patience:</b> a block arrives about every 75 seconds. Funds show as <i>pending</i> until they have a few confirmations, which usually takes a few minutes.</p>
+      </div>
+      <div class="world">
+        <h3>What the world sees</h3>
+        <p><b>Exchange → your t1 address:</b> everything. The exchange knows it's you, and anyone can see that address's balance.</p>
+        <p><b>Swap or friend → your shielded address:</b> the incoming side is private. The chain shows that a shielded transaction happened, and nothing about who sent it or how much.</p>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" data-done="4"> ZEC arrived in my wallet</label>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="step" id="s5" data-step="5">
+    <div class="step-head"><span class="num">05</span><h2>Shield it</h2><span class="time">~1 min</span></div>
+    <p class="why">Shielding moves ZEC from your public (transparent) balance into your private (shielded) balance. From then on, spending it reveals nothing.</p>
+    <div class="cols">
+      <div class="card">
+        <ol class="do">
+          <li>If your wallet shows a <b>transparent balance</b>, tap <b>Shield</b>. Zodl offers this with one tap.</li>
+          <li>Confirm. The fee is tiny, around <code>0.0001</code> ZEC.</li>
+          <li>Wait for confirmation. Your shielded balance goes up and your transparent balance goes to zero.</li>
+        </ol>
+        <p class="tip"><b>Privacy habit:</b> don't shield and then immediately unshield the exact same amount. Matching amounts in and out are easy to link. Leave funds shielded and spend them shielded.</p>
+      </div>
+      <div class="world">
+        <h3>What the world sees</h3>
+        <p>Shielding is visible on the way in: "<code>t1…</code> sent 1.0 ZEC into the shielded pool." After that, the trail goes cold. Nobody can see where those coins go next.</p>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" data-done="5"> My balance is shielded</label>
+  </section>
+
+  <!-- STEP 6 -->
+  <section class="step" id="s6" data-step="6">
+    <div class="step-head"><span class="num">06</span><h2>Send &amp; receive privately</h2><span class="time">~2 min</span></div>
+    <p class="why">This is the moment: your first fully shielded transaction. Send some to a friend, or to a second wallet you control.</p>
+    <div class="cols">
+      <div class="card">
+        <ol class="do">
+          <li>Tap <b>Send</b> and paste a <b>shielded</b> address (<code>u1…</code> or <code>zs1…</code>).</li>
+          <li>Enter an amount. Add a <b>memo</b> if you like, such as "thanks for lunch 🍜". It's encrypted, and only the recipient can read it.</li>
+          <li>Review and confirm. Double-check the first and last few characters of the address.</li>
+          <li>To <b>receive</b>, share your <code>u1…</code> address or its QR code. You can share it as often as you like, and wallets can create fresh ones too.</li>
+        </ol>
+        <p class="pit"><b>No undo:</b> transactions are final. For anything big, send a small test amount first.</p>
+      </div>
+      <div class="world">
+        <h3>What the world sees</h3>
+        <p>A shielded transaction happened, and the fee it paid. <span class="redact">sender</span> <span class="redact">recipient</span> <span class="redact">amount</span> <span class="redact">memo</span> are all encrypted. Only you and the recipient can see them.</p>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" data-done="6"> I sent my first shielded transaction 🎉</label>
+  </section>
+
+  <!-- STEP 7 -->
+  <section class="step" id="s7" data-step="7">
+    <div class="step-head"><span class="num">07</span><h2>Unshield (only when you need to)</h2><span class="time">~2 min</span></div>
+    <p class="why">Sometimes you need to pay a transparent address, for example to deposit at an exchange. Sending from your shielded balance to a <code>t1…</code> or <code>tex1…</code> address is called <b>unshielding</b>.</p>
+    <div class="cols">
+      <div class="card">
+        <ol class="do">
+          <li>Tap <b>Send</b> and paste the transparent address. Your wallet will note that this amount becomes public.</li>
+          <li>Send only what you need. Your remaining balance stays shielded.</li>
+          <li>For <code>tex1…</code> addresses (used by some exchanges), good wallets handle the required two-step route for you.</li>
+        </ol>
+        <p class="tip"><b>Privacy habit:</b> avoid unshielding the exact amount you just shielded, right after shielding it. Different amounts and some time in between make that link much harder to draw.</p>
+      </div>
+      <div class="world">
+        <h3>What the world sees</h3>
+        <p>"The shielded pool paid 0.5 ZEC to <code>t1…</code>." The amount and destination are public. <b>Where it came from inside the pool is not.</b></p>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" data-done="7"> I know when and how to unshield</label>
+
+    <div class="notice">
+      <b>Held shielded ZEC before July 28, 2026?</b> The <b>Ironwood</b> network upgrade (NU6.3) replaced the Orchard pool with a new shielded pool. Orchard now only allows withdrawals. Updated wallets offer to move your funds for you. Your addresses stay the same, and Sapling and transparent ZEC remain spendable. Only use the migration built into your wallet, and never a website that asks for your phrase.
+    </div>
+  </section>
+</div>
+
+<!-- SIMULATOR -->
+<section id="sim">
+  <div class="wrap">
+    <span class="num">PRACTICE MODE</span>
+    <h2>Try it with pretend ZEC</h2>
+    <p class="why">Left: your wallet. Right: the public blockchain, which is what any stranger can read. Complete the five missions and watch what leaks and what doesn't.</p>
+    <div class="sim-grid">
+      <div class="phone" aria-label="Simulated wallet">
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Total balance</div>
+          <div class="bal" id="simTotal">0.0000 <small>ZEC</small></div>
+        </div>
+        <div class="pools">
+          <div class="pool sh">🛡 Shielded<b id="simS">0.0000</b></div>
+          <div class="pool">👁 Transparent<b id="simT">0.0000</b></div>
+        </div>
+        <div class="mission" id="mission" aria-live="polite"></div>
+        <button class="btn" id="simReset" style="align-self:flex-start;font-size:14px;padding:8px 12px">↺ Restart practice</button>
+      </div>
+      <div class="ledger" aria-label="Public blockchain view">
+        <div class="ledger-head"><h3>🌐 Public blockchain: what anyone sees</h3><span class="blk" id="blk">block 3,412,000</span></div>
+        <div id="txs"><div class="empty">No transactions yet.<br>Complete mission 1 to see what appears on-chain.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <section class="step" id="faq" style="border-top:1px solid var(--line)">
+    <div class="step-head"><span class="num">HELP</span><h2>Stuck?</h2></div>
+    <details><summary>My balance says "pending" or "syncing".</summary><p>Wallets scan the chain privately on your device, so a first sync can take a few minutes. New funds become spendable after a few confirmations, at about 75 seconds per block. Keep the app open and on Wi-Fi.</p></details>
+    <details><summary>My ZEC arrived as "transparent".</summary><p>The sender used your t1 address, which is common with exchanges. Tap Shield (step 5).</p></details>
+    <details><summary>The exchange won't accept my address.</summary><p>Some exchanges only accept transparent addresses. Copy the transparent address from your wallet's Receive screen for deposits into your wallet, then shield it.</p></details>
+    <details><summary>I restored my wallet and my balance is missing.</summary><p>Enter the correct birthday height, or an earlier one, and let it rescan. A birthday later than your first transaction will skip your funds.</p></details>
+    <details><summary>Someone says I must "migrate to Ironwood" on their website.</summary><p>Scam. Migration happens inside your wallet app. No legitimate process asks for your recovery phrase.</p></details>
+    <details><summary>How private is this, really?</summary><p>Fully shielded transactions hide sender, receiver, amount, and memo on-chain. Privacy leaks at the edges: shielding from and unshielding to transparent addresses, matching amounts and timing, and network metadata (some wallets offer Tor). Staying shielded is the strongest default.</p></details>
+  </section>
+
+  <div class="finish" id="finish">
+    <h2 id="finishTitle">You're one shielded transaction away.</h2>
+    <p class="why" style="margin:0 auto 20px" id="finishText">Work through the steps above. Your progress is saved in this browser only.</p>
+    <a class="btn primary" id="shareBtn" href="#" target="_blank" rel="noopener" hidden>Share that you went shielded →</a>
+  </div>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>An independent, open-source guide. It's not affiliated with any wallet. This page has no tracking, no accounts, and no network requests besides fonts. Progress is stored only in your browser. Wallet interfaces change, so if a button name differs, look for the same idea nearby. Not financial advice.</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const store = {
+    get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+
+  // ---------- theme ----------
+  const themeBtn = document.getElementById('themeBtn');
+  const savedTheme = store.get('zts-theme', null);
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+  themeBtn.addEventListener('click', () => {
+    const cur = document.documentElement.dataset.theme ||
+      (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next; store.set('zts-theme', next);
+  });
+
+  // ---------- progress ----------
+  const done = new Set(store.get('zts-done', []));
+  const prog = document.getElementById('progress');
+  for (let i = 1; i <= 7; i++) {
+    const a = document.createElement('a'); a.href = '#s' + i; a.setAttribute('aria-label', 'Step ' + i);
+    prog.appendChild(a);
+  }
+  function renderProgress(){
+    [...prog.children].forEach((a, i) => a.classList.toggle('done', done.has(i + 1)));
+    document.getElementById('pcount').textContent = done.size + ' / 7';
+    document.querySelectorAll('[data-done]').forEach(cb => cb.checked = done.has(+cb.dataset.done));
+    const all = done.size === 7, sent = done.has(6);
+    document.getElementById('finishTitle').textContent = all ? "You're shielded. Welcome to private money." :
+      sent ? 'First shielded transaction: done. ✅' : "You're one shielded transaction away.";
+    document.getElementById('finishText').textContent = all ? 'You can set up a wallet, shield, send, receive, and unshield. Now show someone else how.' :
+      'Work through the steps above. Your progress is saved in this browser only.';
+    const share = document.getElementById('shareBtn');
+    share.hidden = !sent;
+    share.href = 'https://x.com/intent/post?text=' + encodeURIComponent('I just made my first shielded Zcash transaction. Sender, receiver, amount: all encrypted. 🛡\n\nZero to shielded in ~15 min: ' + location.href.split('#')[0]);
+  }
+  document.querySelectorAll('[data-done]').forEach(cb => cb.addEventListener('change', () => {
+    const n = +cb.dataset.done; cb.checked ? done.add(n) : done.delete(n);
+    store.set('zts-done', [...done]); renderProgress();
+    if (cb.checked && n < 7) setTimeout(() => document.getElementById('s' + (n + 1)).scrollIntoView(), 250);
+  }));
+  renderProgress();
+
+  // ---------- tabs ----------
+  document.querySelectorAll('[data-tabs]').forEach(list => {
+    const card = list.parentElement;
+    list.addEventListener('click', e => {
+      const b = e.target.closest('button[data-tab]'); if (!b) return;
+      list.querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', x === b));
+      card.querySelectorAll('.tabpanel').forEach(p => p.hidden = p.dataset.panel !== b.dataset.tab);
+    });
+  });
+
+  // ---------- quiz ----------
+  document.querySelectorAll('#quiz .q').forEach(q => {
+    q.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const right = b.dataset.a === '1';
+      q.querySelectorAll('button').forEach(x => x.classList.remove('right', 'wrong'));
+      b.classList.add(right ? 'right' : 'wrong');
+      q.querySelector('.fb').textContent = right ? 'Correct.' :
+        (q.dataset.q === '0' ? 'Never. Anyone with your words can take everything. Real support never asks.' : 'The PIN only unlocks that one phone. The recovery phrase is the real key.');
+    });
+  });
+
+  // ---------- address inspector ----------
+  const B32 = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+  function polymod(v){ const G=[0x3b6a57b2,0x26508e6d,0x1ea119fa,0x3d4233dd,0x2a1462b3]; let c=1;
+    for (const x of v){ const b=c>>>25; c=((c&0x1ffffff)<<5)^x; for(let i=0;i<5;i++) if((b>>>i)&1) c^=G[i]; } return c>>>0; }
+  function bech32Check(s){
+    s = s.toLowerCase(); const p = s.lastIndexOf('1'); if (p < 1 || s.length - p < 7) return null;
+    const hrp = s.slice(0, p), data = [];
+    for (const ch of s.slice(p + 1)) { const i = B32.indexOf(ch); if (i < 0) return null; data.push(i); }
+    const exp = [...hrp].map(c => c.charCodeAt(0) >> 5).concat([0], [...hrp].map(c => c.charCodeAt(0) & 31));
+    const pm = polymod(exp.concat(data));
+    return { hrp, variant: pm === 1 ? 'bech32' : pm === 0x2bc830a3 ? 'bech32m' : null };
+  }
+  const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  async function b58Check(s){
+    let n = 0n; for (const ch of s){ const i = B58.indexOf(ch); if (i < 0) return false; n = n * 58n + BigInt(i); }
+    const bytes = []; while (n > 0n){ bytes.unshift(Number(n & 255n)); n >>= 8n; }
+    for (const ch of s){ if (ch === '1') bytes.unshift(0); else break; }
+    if (bytes.length !== 26) return false; // 2-byte prefix + 20-byte hash + 4-byte checksum
+    if (!crypto.subtle) return null;
+    const body = new Uint8Array(bytes.slice(0, 22));
+    const h = new Uint8Array(await crypto.subtle.digest('SHA-256', await crypto.subtle.digest('SHA-256', body)));
+    return bytes.slice(22).every((b, i) => b === h[i]);
+  }
+  const verdict = document.getElementById('verdict');
+  const addr = document.getElementById('addr');
+  const show = (tag, cls, text) => verdict.innerHTML = `<span class="tag ${cls}">${tag}</span>${text}`;
+  const HINTS = { u1:'u1… is a unified address, the default. Paste a real one from your wallet to verify it.', zs1:'zs1… is a Sapling shielded address. Paste a real one to verify it.', t1:'t1… is a public transparent address. Paste a real one to verify it.', tex1:'tex1… is a TEX address that only receives from transparent funds. Paste a real one to verify it.' };
+  document.querySelectorAll('[data-sample]').forEach(b => b.addEventListener('click', () => {
+    addr.value = b.dataset.sample; addr.focus(); verdict.textContent = HINTS[b.dataset.sample];
+  }));
+  let seq = 0;
+  addr.addEventListener('input', async () => {
+    const s = addr.value.trim(), my = ++seq;
+    if (!s) { verdict.innerHTML = '<span style="color:var(--muted)">Checks the prefix and checksum right in your browser. Nothing is sent anywhere.</span>'; return; }
+    const low = s.toLowerCase();
+    if (/^(utest|ztestsapling|textest)1/.test(low) || /^tm/.test(s)) return show('TESTNET', 'bad', 'This is a <b>testnet</b> address. Test coins have no value, so don\'t send real ZEC here.');
+    if (/^(t1|t3)/.test(s)) {
+      const ok = await b58Check(s); if (my !== seq) return;
+      if (ok === false) return show('INVALID', 'bad', 'Looks transparent, but the checksum fails. It may have a typo or be incomplete.');
+      return show('PUBLIC', 'public', `<b>Transparent ${s[1] === '1' ? '(P2PKH)' : '(P2SH / multisig)'} address.</b> Sending here makes the amount and address visible to everyone.${ok === null ? '' : ' Checksum ✓'}`);
+    }
+    if (/^zc/.test(s)) return show('LEGACY', 'bad', '<b>Sprout</b> address. This is deprecated, and funds can\'t be sent to it anymore.');
+    if (/^(u1|zs1|tex1)/.test(low)) {
+      const r = bech32Check(s);
+      if (!r || !r.variant) return show('INVALID', 'bad', 'The prefix looks right, but the checksum fails. It may have a typo or be incomplete.');
+      if (r.hrp === 'u' && r.variant === 'bech32m') return show('SHIELDED', 'shielded', '<b>Unified address.</b> Contains a shielded receiver, so wallets will send privately. Checksum ✓');
+      if (r.hrp === 'zs' && r.variant === 'bech32') return show('SHIELDED', 'shielded', '<b>Sapling shielded address.</b> Private and still fully supported. Checksum ✓');
+      if (r.hrp === 'tex' && r.variant === 'bech32m') return show('PUBLIC · TEX', 'public', '<b>TEX address</b> (ZIP 320). Only accepts ZEC from transparent funds. Your wallet will unshield in two steps, and the amount becomes public. Checksum ✓');
+      return show('INVALID', 'bad', 'The encoding doesn\'t match this address type.');
+    }
+    show('UNKNOWN', 'bad', 'Not a recognized Zcash address. Addresses start with u1, zs1, t1, t3, or tex1.');
+  });
+
+  // ---------- simulator ----------
+  const FEE = 0.0001;
+  const hex = n => [...crypto.getRandomValues(new Uint8Array(n))].map(b => b.toString(16).padStart(2, '0')).join('');
+  const f = n => n.toFixed(4);
+  const R = '<span class="redact">████ hidden</span>';
+  let S;
+  const txs = document.getElementById('txs'), mission = document.getElementById('mission');
+  function reset(){
+    S = { step: 0, t: 0, s: 0, block: 3412000, shieldedIn: 0 };
+    txs.innerHTML = '<div class="empty">No transactions yet.<br>Complete mission 1 to see what appears on-chain.</div>';
+    render();
+  }
+  function addTx(kind, rows, note, private_){
+    if (txs.querySelector('.empty')) txs.innerHTML = '';
+    S.block += 1 + Math.floor(Math.random() * 3);
+    document.getElementById('blk').textContent = 'block ' + S.block.toLocaleString();
+    const el = document.createElement('div'); el.className = 'tx';
+    el.innerHTML = `<div class="t"><span class="kind">${private_ ? '🛡' : '👁'} ${kind}</span><span style="color:var(--muted)">tx ${hex(4)}…</span></div>
+      <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl><div class="note">${note}</div>`;
+    txs.prepend(el);
+  }
+  const T_ME = 't1Yx' + 'Qk7…3mPa', T_EX_HOT = 't1Ex' + 'Hot…9Wz2', T_EX_DEP = 't1Dp' + 'Kr4…aa8Q';
+  const M = [
+    { k:'Mission 1 of 5 · Get ZEC', p:'You bought <b>1 ZEC</b> on an exchange. It only withdraws to transparent addresses, so you give it your <code>t1…</code> address.', btn:'Withdraw 1 ZEC to my t1 address',
+      run(){ S.t = 1; addTx('Transparent transfer', [['from', T_EX_HOT + ' <i>(exchange)</i>'], ['to', T_ME], ['amount', '1.0000 ZEC'], ['fee', f(FEE)]],
+        'Fully public. Anyone can see this address got 1 ZEC from an exchange, and the exchange knows the address is yours.'); } },
+    { k:'Mission 2 of 5 · Shield', p:'Your 1 ZEC is sitting in public view. Move it into your shielded balance.', btn:'🛡 Shield my transparent balance',
+      run(){ const amt = S.t - FEE; S.shieldedIn = amt; S.t = 0; S.s += amt;
+        addTx('Shielding', [['from', T_ME], ['to', R], ['amount', '1.0000 ZEC <i>left the public side</i>'], ['fee', f(FEE)]],
+          'The world sees coins <b>enter</b> the shielded pool from your t1 address, and then the trail ends. Where they go next is invisible.', true); } },
+    { k:'Mission 3 of 5 · Send privately', p:'Pay a friend back for lunch, shielded, with an encrypted memo.', form:true, btn:'Send shielded',
+      run(){ const a = parseFloat(document.getElementById('amt').value) || 0.25, memo = document.getElementById('memo').value || 'thanks for lunch 🍜';
+        if (a <= 0 || a + FEE > S.s + 1e-9) { alert2('Not enough shielded balance for that amount plus fee.'); return false; }
+        S.s -= a + FEE; S.lastMemo = memo;
+        addTx('Shielded transaction', [['from', R], ['to', R], ['amount', R], ['memo', R], ['fee', f(FEE)]],
+          `Only the fee is public. Your friend sees <b>${f(a)} ZEC</b> and reads “${escapeHtml(memo)}”. Nobody else can.`, true); } },
+    { k:'Mission 4 of 5 · Receive privately', p:'Share your <code>u1…</code> address. Your friend sends you 0.5 ZEC for concert tickets.', btn:'Share address & receive 0.5 ZEC',
+      run(){ S.s += 0.5; addTx('Shielded transaction', [['from', R], ['to', R], ['amount', R], ['memo', R], ['fee', f(FEE)]],
+        'Looks identical to every other shielded transaction. Nobody can tell this one was a payment to you.', true); } },
+    { k:'Mission 5 of 5 · Unshield', p:'You want to deposit some ZEC to an exchange that only accepts transparent addresses.', form2:true, btn:'Unshield to exchange',
+      run(){ const a = parseFloat(document.getElementById('amt2').value) || 0.3;
+        if (a <= 0 || a + FEE > S.s + 1e-9) { alert2('Not enough shielded balance for that amount plus fee.'); return false; }
+        S.s -= a + FEE;
+        const linked = Math.abs(a - S.shieldedIn) < 0.00005 || Math.abs(a - 1) < 0.00005;
+        addTx('Unshielding', [['from', R], ['to', T_EX_DEP + ' <i>(exchange)</i>'], ['amount', f(a) + ' ZEC'], ['fee', f(FEE)]],
+          linked ? '⚠️ The amount and destination are public, and <b>this amount matches what you shielded earlier</b>. An observer could guess these are the same coins. Next time, pick a different amount and wait a while.'
+                 : 'The amount and destination are public. Which shielded coins paid for it is not, so this can\'t be linked back to your earlier transactions.', !linked); } },
+  ];
+  function alert2(msg){ let w = mission.querySelector('.warnbox'); if (!w) { w = document.createElement('div'); w.className = 'warnbox'; mission.appendChild(w); } w.textContent = msg; }
+  function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function render(){
+    document.getElementById('simS').textContent = f(S.s);
+    document.getElementById('simT').textContent = f(S.t);
+    document.getElementById('simTotal').innerHTML = f(S.s + S.t) + ' <small>ZEC</small>';
+    if (S.step >= M.length) {
+      mission.innerHTML = `<div class="done-card"><h4>🛡 Practice complete</h4><p>You shielded, sent, received, and unshielded. Now do it for real, starting at <a href="#s1">step 1</a>.</p></div>`;
+      return;
+    }
+    const m = M[S.step];
+    mission.innerHTML = `<div class="k">${m.k}</div><p>${m.p}</p>
+      ${m.form ? '<label for="amt">Amount (ZEC)</label><input id="amt" type="number" step="0.01" min="0.01" value="0.25"><label for="memo">Encrypted memo</label><input id="memo" maxlength="80" value="thanks for lunch 🍜">' : ''}
+      ${m.form2 ? `<label for="amt2">Amount to unshield (ZEC). Try ${f(S.shieldedIn)} to see why matching amounts leak.</label><input id="amt2" type="number" step="0.01" min="0.01" value="0.30">` : ''}
+      <button class="btn primary" id="simGo" style="margin-top:12px">${m.btn}</button>`;
+    document.getElementById('simGo').addEventListener('click', () => {
+      if (M[S.step].run() === false) return;
+      S.step++; render();
+    });
+  }
+  document.getElementById('simReset').addEventListener('click', reset);
+  reset();
+})();
+</script>
+</body>
+</html>
